@@ -54,14 +54,13 @@ def setup_google_oauth():
             """, unsafe_allow_html=True)
         
         # Handle OAuth callback
-        params = st.experimental_get_query_params()
-        if "code" in params:
+        if "code" in st.query_params:
             try:
-                flow.fetch_token(code=params["code"][0])
+                flow.fetch_token(code=st.query_params["code"])
                 credentials = flow.credentials
                 st.session_state.user = get_or_create_user(credentials)
-                st.experimental_set_query_params()
-                st.experimental_rerun()
+                st.query_params.clear()
+                st.rerun()
             except Exception as e:
                 st.error(f"Authentication failed: {str(e)}")
                 if "oauth_state" in st.session_state:
