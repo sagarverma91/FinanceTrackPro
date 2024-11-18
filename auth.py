@@ -74,10 +74,9 @@ def setup_google_oauth():
                 if mock_user:
                     st.session_state.user = mock_user
                     initialize_mock_data(mock_user["id"])
-                    # Remove st.rerun() and add success message
-                    st.success("Successfully logged in!")
-                    # Force sidebar navigation to Dashboard
-                    st.session_state.page = "Dashboard"
+                    st.session_state["authentication_status"] = True  # Add this line
+                    st.session_state["page"] = "Dashboard"  # Force dashboard page
+                    st.rerun()  # This should be the last line
             
             # Add descriptive text
             st.markdown("""
@@ -103,6 +102,8 @@ def setup_google_oauth():
                 
                 if user_info:
                     st.session_state.user = user_info
+                    st.session_state["authentication_status"] = True
+                    st.session_state["page"] = "Dashboard"
                     st.query_params.clear()
                     st.rerun()
                 else:
@@ -142,7 +143,7 @@ def setup_google_oauth():
         log_oauth_error("Initialization Error", str(e))
 
 def check_authentication():
-    return "user" in st.session_state
+    return "authentication_status" in st.session_state and st.session_state["authentication_status"]
 
 def get_or_create_user(credentials):
     conn = get_db_connection()

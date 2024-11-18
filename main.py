@@ -23,30 +23,23 @@ st.set_page_config(
 def main():
     try:
         # Initialize database
-        logger.info("Starting application initialization...")
-        logger.info("Initializing database...")
         init_database()
-        logger.info("Database initialization completed successfully")
         
-        # Setup authentication
-        logger.info("Checking authentication status...")
+        # Check authentication first
         if not check_authentication():
-            logger.info("User not authenticated, showing login page...")
-            try:
-                setup_google_oauth()
-                logger.info("Google OAuth setup completed")
-            except Exception as auth_error:
-                logger.error(f"Error in OAuth setup: {str(auth_error)}")
-                logger.error(traceback.format_exc())
-                st.error("Failed to setup authentication. Please try again.")
+            setup_google_oauth()
             return
 
-        # Sidebar navigation with page state management
-        logger.info("Setting up navigation...")
+        # If authenticated, show the navigation and content
+        st.sidebar.markdown(f"Welcome, {st.session_state.user['email']}")
+        
+        # Navigation
         page = st.sidebar.selectbox(
             "Navigation",
             ["Dashboard", "Transactions", "Budget", "Settings"],
-            key="page"  # Add key parameter for state management
+            index=["Dashboard", "Transactions", "Budget", "Settings"].index(
+                st.session_state.get("page", "Dashboard")
+            )
         )
 
         # Header
