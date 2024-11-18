@@ -74,7 +74,10 @@ def setup_google_oauth():
                 if mock_user:
                     st.session_state.user = mock_user
                     initialize_mock_data(mock_user["id"])
-                    st.rerun()
+                    # Remove st.rerun() and add success message
+                    st.success("Successfully logged in!")
+                    # Force sidebar navigation to Dashboard
+                    st.session_state.page = "Dashboard"
             
             # Add descriptive text
             st.markdown("""
@@ -90,7 +93,7 @@ def setup_google_oauth():
                 
                 Sign in with your Google account to begin.
             """)
-        
+
         # Handle OAuth callback with improved error handling
         if "code" in st.query_params:
             try:

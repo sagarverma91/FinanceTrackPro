@@ -41,11 +41,12 @@ def main():
                 st.error("Failed to setup authentication. Please try again.")
             return
 
-        # Sidebar navigation
+        # Sidebar navigation with page state management
         logger.info("Setting up navigation...")
         page = st.sidebar.selectbox(
             "Navigation",
-            ["Dashboard", "Transactions", "Budget", "Settings"]
+            ["Dashboard", "Transactions", "Budget", "Settings"],
+            key="page"  # Add key parameter for state management
         )
 
         # Header
