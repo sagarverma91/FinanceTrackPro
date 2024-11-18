@@ -11,8 +11,9 @@ def setup_google_oauth():
     st.title("Welcome to Personal Finance Manager")
     
     try:
-        # Get the Replit URL from environment using HTTP
-        replit_url = f"http://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER')}.repl.co"
+        # Get the Replit URL and construct redirect URI
+        replit_url = f"https://FinanceTrackPro.sv10491.repl.co"
+        redirect_uri = f"{replit_url}/callback"
         
         # Google OAuth configuration
         client_config = {
@@ -21,16 +22,16 @@ def setup_google_oauth():
                 "client_secret": os.environ.get("GOOGLE_CLIENT_SECRET"),
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [f"{replit_url}/callback"],
+                "redirect_uris": [redirect_uri],
                 "javascript_origins": [replit_url]
             }
         }
 
-        # Initialize OAuth flow
+        # Initialize OAuth flow with exact redirect URI
         flow = Flow.from_client_config(
             client_config,
             scopes=["openid", "email", "profile"],
-            redirect_uri=client_config["web"]["redirect_uris"][0]
+            redirect_uri=redirect_uri
         )
         
         if "oauth_state" not in st.session_state:
@@ -93,8 +94,7 @@ def setup_google_oauth():
                     raise Exception("Failed to get user information")
                 
             except requests.exceptions.SSLError as ssl_error:
-                st.error("SSL Certificate Error. Please try again using HTTP.")
-                st.info("If the problem persists, please contact support.")
+                st.error("SSL Certificate Error. Please try again.")
                 log_oauth_error("SSL Error", str(ssl_error))
                 
             except requests.exceptions.ConnectionError as conn_error:
