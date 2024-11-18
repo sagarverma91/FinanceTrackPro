@@ -33,38 +33,36 @@ def main():
         # If authenticated, show the navigation and content
         st.sidebar.markdown(f"Welcome, {st.session_state.user['email']}")
         
-        # Update page navigation to use query parameters
-        page = st.query_params.get("page", "Dashboard")
-        st.session_state["page"] = page
-        
         # Navigation
-        page = st.sidebar.selectbox(
+        selected_page = st.sidebar.selectbox(
             "Navigation",
             ["Dashboard", "Transactions", "Budget", "Settings"],
-            index=["Dashboard", "Transactions", "Budget", "Settings"].index(page)
+            index=["Dashboard", "Transactions", "Budget", "Settings"].index(
+                st.session_state.get("page", "Dashboard")
+            )
         )
-        
-        # Update query parameters when navigation changes
-        st.experimental_set_query_params(page=page)
+
+        # Update session state
+        st.session_state["page"] = selected_page
 
         # Header
-        st.header(f"Personal Finance Manager - {page}")
+        st.header(f"Personal Finance Manager - {selected_page}")
         
         try:
-            logger.info(f"Loading {page} page...")
-            if page == "Dashboard":
+            logger.info(f"Loading {selected_page} page...")
+            if selected_page == "Dashboard":
                 dashboard.show_dashboard()
-            elif page == "Transactions":
+            elif selected_page == "Transactions":
                 transactions.show_transactions()
-            elif page == "Budget":
+            elif selected_page == "Budget":
                 budget.show_budget()
-            elif page == "Settings":
+            elif selected_page == "Settings":
                 show_settings()
-            logger.info(f"{page} page loaded successfully")
+            logger.info(f"{selected_page} page loaded successfully")
         except Exception as page_error:
-            logger.error(f"Error in {page} page: {str(page_error)}")
+            logger.error(f"Error in {selected_page} page: {str(page_error)}")
             logger.error(traceback.format_exc())
-            st.error(f"An error occurred while loading the {page} page. Please try again.")
+            st.error(f"An error occurred while loading the {selected_page} page. Please try again.")
             
     except Exception as e:
         logger.error(f"Critical application error: {str(e)}")
