@@ -1,5 +1,5 @@
 import streamlit as st
-from database import get_user_transactions
+from database import get_user_transactions, get_db_connection
 import visualization as viz
 import pandas as pd
 
@@ -10,14 +10,25 @@ def show_dashboard():
     transactions = get_user_transactions(st.session_state.user["id"])
     
     with col1:
+        # Key metrics
+        if transactions:
+            df = pd.DataFrame(transactions)
+            total_spent = df['amount'].sum()
+            avg_transaction = df['amount'].mean()
+            st.metric("Total Spent", f"${total_spent:,.2f}")
+            st.metric("Average Transaction", f"${avg_transaction:,.2f}")
+        
         # Spending trend
         spending_trend = viz.create_spending_trend(transactions)
         st.plotly_chart(spending_trend, use_container_width=True)
         
         # Recent transactions
         st.subheader("Recent Transactions")
-        for transaction in transactions[:5]:
-            st.write(f"{transaction['date']}: ${transaction['amount']} - {transaction['description']}")
+        if transactions:
+            for transaction in transactions[:5]:
+                st.write(f"{transaction['date'].strftime('%Y-%m-%d')}: ${transaction['amount']:,.2f} - {transaction['description']}")
+        else:
+            st.info("No recent transactions")
     
     with col2:
         # Category breakdown
@@ -26,22 +37,36 @@ def show_dashboard():
         
         # Budget overview
         st.subheader("Budget Overview")
-        budget_progress = viz.create_budget_progress(
-            get_budget_data(),
-            get_actual_spending()
-        )
-        st.plotly_chart(budget_progress, use_container_width=True)
+        budget_data = get_budget_data()
+        actual_spending = get_actual_spending(transactions)
+        if not budget_data.empty and not actual_spending.empty:
+            budget_progress = viz.create_budget_progress(budget_data, actual_spending)
+            st.plotly_chart(budget_progress, use_container_width=True)
+        else:
+            st.info("Set up your budget to see the overview")
 
 def get_budget_data():
-    # Get budget data from database
-    return pd.DataFrame({
-        'category': ['Food', 'Transport', 'Entertainment'],
-        'amount': [500, 200, 300]
-    })
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    cur.execute("""
+        SELECT category, amount
+        FROM budgets
+        WHERE user_id = %s
+    """, (st.session_state.user["id"],))
+    
+    budgets = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    if budgets:
+        return pd.DataFrame(budgets, columns=['category', 'amount'])
+    return pd.DataFrame()
 
-def get_actual_spending():
-    # Calculate actual spending from transactions
-    return pd.DataFrame({
-        'category': ['Food', 'Transport', 'Entertainment'],
-        'amount': [450, 180, 250]
-    })
+def get_actual_spending(transactions):
+    if not transactions:
+        return pd.DataFrame()
+    
+    df = pd.DataFrame(transactions)
+    actual = df.groupby('category')['amount'].sum().reset_index()
+    return actual[['category', 'amount']]

@@ -23,8 +23,8 @@ def setup_gocardless():
         redirect_flow = client.redirect_flows.create(
             params={
                 "description": "Connect your bank account",
-                "session_token": st.session_state.user["id"],
-                "success_redirect_url": "http://localhost:5000/callback"
+                "session_token": str(st.session_state.user["id"]),
+                "success_redirect_url": "https://financetrackpro.sv10491.repl.co/callback"
             }
         )
         
@@ -46,9 +46,9 @@ def sync_transactions(user_id):
         for transaction in transactions:
             save_transaction(
                 user_id=user_id,
-                amount=transaction.amount,
+                amount=float(transaction.amount) / 100,  # Convert pence to pounds
                 category="Uncategorized",
-                description=transaction.description,
+                description=transaction.description or "Bank Transaction",
                 bank_reference=transaction.id
             )
             
