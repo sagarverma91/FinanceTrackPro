@@ -7,19 +7,7 @@ import requests
 import json
 from datetime import datetime, timedelta
 import urllib3
-from streamlit import components
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-def init_dev_login():
-    """Initialize development login session"""
-    # Create mock user session
-    mock_user = create_or_get_mock_user()
-    if mock_user:
-        st.session_state.user = mock_user
-        st.session_state["authentication_status"] = True
-        initialize_mock_data(mock_user["id"])
-        return True
-    return False
 
 def setup_google_oauth():
     st.title("Welcome to Personal Finance Manager")
@@ -81,18 +69,19 @@ def setup_google_oauth():
             # Add development login button
             st.markdown("---")  # Add separator
             if st.button("🔑 Development Login (Bypass Authentication)", type="secondary"):
-                if init_dev_login():
-                    st.success("Successfully logged in!")
-                    st.session_state.page = "Dashboard"
-                    # Remove st.rerun() and use JavaScript to force reload
-                    components.html(
-                        '''
-                        <script>
-                            window.parent.location.reload()
-                        </script>
-                        ''',
-                        height=0
-                    )
+                # Create mock user session
+                mock_user = {
+                    "id": 1,
+                    "email": "dev@example.com"
+                }
+                st.session_state.user = mock_user
+                st.session_state["authentication_status"] = True
+                st.session_state["page"] = "Dashboard"
+                
+                # Initialize sample data
+                initialize_mock_data(mock_user["id"])
+                st.success("Successfully logged in!")
+                st.experimental_rerun()
             
             # Add descriptive text
             st.markdown("""
@@ -121,7 +110,7 @@ def setup_google_oauth():
                     st.session_state["authentication_status"] = True
                     st.session_state["page"] = "Dashboard"
                     st.query_params.clear()
-                    st.rerun()
+                    st.experimental_rerun()
                 else:
                     raise Exception("Failed to get user information")
                 
@@ -198,35 +187,6 @@ def get_or_create_user(credentials):
         
     except Exception as e:
         st.error("Database error while processing user information")
-        log_oauth_error("Database Error", str(e))
-        return None
-    finally:
-        cur.close()
-        conn.close()
-
-def create_or_get_mock_user():
-    """Create or get the mock user for development"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    try:
-        # Check if mock user exists
-        cur.execute("SELECT id, email FROM users WHERE email = %s", ("dev@example.com",))
-        user = cur.fetchone()
-        
-        if not user:
-            cur.execute("""
-                INSERT INTO users (email)
-                VALUES (%s)
-                RETURNING id, email
-            """, ("dev@example.com",))
-            user = cur.fetchone()
-            conn.commit()
-        
-        return {"id": user[0], "email": user[1]} if user else None
-        
-    except Exception as e:
-        st.error("Database error while creating mock user")
         log_oauth_error("Database Error", str(e))
         return None
     finally:

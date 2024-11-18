@@ -2,6 +2,9 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import streamlit as st
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_db_connection():
     try:
@@ -13,7 +16,8 @@ def get_db_connection():
             port=os.environ['PGPORT']
         )
     except Exception as e:
-        st.error(f"Database connection error: {str(e)}")
+        logger.error(f"Database connection error: {str(e)}")
+        st.error(f"Database connection error. Please try again.")
         raise
 
 def init_database():
@@ -22,6 +26,9 @@ def init_database():
     
     try:
         # Create necessary tables
+        logger.info("Creating database tables...")
+        
+        # Create users table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -30,7 +37,9 @@ def init_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        logger.info("Users table created successfully")
         
+        # Create transaction_categories table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS transaction_categories (
                 id SERIAL PRIMARY KEY,
@@ -42,7 +51,9 @@ def init_database():
                 UNIQUE(user_id, name)
             )
         """)
+        logger.info("Transaction categories table created successfully")
         
+        # Create transactions table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS transactions (
                 id SERIAL PRIMARY KEY,
@@ -55,7 +66,9 @@ def init_database():
                 tags TEXT[]
             )
         """)
+        logger.info("Transactions table created successfully")
         
+        # Create budgets table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS budgets (
                 id SERIAL PRIMARY KEY,
@@ -63,17 +76,21 @@ def init_database():
                 category VARCHAR(50),
                 amount DECIMAL(10,2),
                 period VARCHAR(20),
-                start_date DATE,
+                start_date DATE DEFAULT CURRENT_DATE,
                 end_date DATE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(user_id, category, period, start_date)
             )
         """)
+        logger.info("Budgets table created successfully")
         
         conn.commit()
+        logger.info("All tables created successfully")
         
     except Exception as e:
-        st.error(f"Database initialization error: {str(e)}")
+        conn.rollback()
+        logger.error(f"Database initialization error: {str(e)}")
+        st.error("Failed to initialize database. Please try again.")
         raise
     finally:
         cur.close()
@@ -91,7 +108,7 @@ def get_user_transactions(user_id):
         """, (user_id,))
         return cur.fetchall()
     except Exception as e:
-        st.error(f"Error fetching transactions: {str(e)}")
+        logger.error(f"Error fetching transactions: {str(e)}")
         return []
     finally:
         cur.close()
@@ -132,7 +149,7 @@ def get_user_categories(user_id):
             categories = cur.fetchall()
         return categories
     except Exception as e:
-        st.error(f"Error fetching categories: {str(e)}")
+        logger.error(f"Error fetching categories: {str(e)}")
         return []
     finally:
         cur.close()
@@ -148,7 +165,8 @@ def save_transaction(user_id, amount, category, description, date=None, bank_ref
         """, (user_id, amount, category, description, date, bank_reference, tags))
         conn.commit()
     except Exception as e:
-        st.error(f"Error saving transaction: {str(e)}")
+        conn.rollback()
+        logger.error(f"Error saving transaction: {str(e)}")
         raise
     finally:
         cur.close()
@@ -166,7 +184,8 @@ def save_category(user_id, name, icon, color):
         """, (user_id, name, icon, color))
         conn.commit()
     except Exception as e:
-        st.error(f"Error saving category: {str(e)}")
+        conn.rollback()
+        logger.error(f"Error saving category: {str(e)}")
         raise
     finally:
         cur.close()
