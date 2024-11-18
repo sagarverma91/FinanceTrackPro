@@ -1,7 +1,7 @@
 import streamlit as st
-from auth import check_authentication, setup_google_oauth
 from components import dashboard, budget, transactions
 from database import init_database
+from auth import initialize_mock_data
 import visualization as viz
 import logging
 import sys
@@ -25,18 +25,13 @@ def main():
         # Initialize database
         init_database()
         
-        # Development mode - bypass authentication
-        if st.query_params.get("dev_mode"):
+        # Auto-initialize user session
+        if "user" not in st.session_state:
             st.session_state["user"] = {"id": 1, "email": "dev@example.com"}
-            st.session_state["authentication_status"] = True
+            initialize_mock_data(1)  # Initialize sample data
         
-        # Check authentication
-        if not check_authentication():
-            setup_google_oauth()
-            return
-
-        # If authenticated, show the navigation and content
-        st.sidebar.markdown(f"Welcome, {st.session_state.user['email']}")
+        # Show navigation and content
+        st.sidebar.markdown("### Navigation")
         
         # Navigation
         selected_page = st.sidebar.selectbox(
