@@ -6,13 +6,15 @@ from database import get_db_connection
 import requests
 import json
 from datetime import datetime
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def setup_google_oauth():
     st.title("Welcome to Personal Finance Manager")
     
     try:
         # Get the Replit URL and construct redirect URI
-        replit_url = f"https://financetrackpro.sv10491.repl.co"
+        replit_url = "https://financetrackpro.sv10491.repl.co"
         redirect_uri = f"{replit_url}/callback"
         
         # Google OAuth configuration
@@ -134,12 +136,13 @@ def get_or_create_user(credentials):
     cur = conn.cursor()
     
     try:
-        # Get user info from Google with error handling
+        # Get user info from Google with error handling and disabled SSL verification
         try:
             userinfo_response = requests.get(
                 "https://www.googleapis.com/oauth2/v2/userinfo",
                 headers={'Authorization': f'Bearer {credentials.token}'},
-                timeout=10
+                timeout=10,
+                verify=False  # Temporarily disable SSL verification
             )
             userinfo_response.raise_for_status()
             userinfo = userinfo_response.json()
