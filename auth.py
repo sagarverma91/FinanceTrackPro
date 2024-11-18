@@ -7,7 +7,19 @@ import requests
 import json
 from datetime import datetime, timedelta
 import urllib3
+from streamlit import components
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+def init_dev_login():
+    """Initialize development login session"""
+    # Create mock user session
+    mock_user = create_or_get_mock_user()
+    if mock_user:
+        st.session_state.user = mock_user
+        st.session_state["authentication_status"] = True
+        initialize_mock_data(mock_user["id"])
+        return True
+    return False
 
 def setup_google_oauth():
     st.title("Welcome to Personal Finance Manager")
@@ -69,14 +81,18 @@ def setup_google_oauth():
             # Add development login button
             st.markdown("---")  # Add separator
             if st.button("🔑 Development Login (Bypass Authentication)", type="secondary"):
-                # Create mock user session
-                mock_user = create_or_get_mock_user()
-                if mock_user:
-                    st.session_state.user = mock_user
-                    initialize_mock_data(mock_user["id"])
-                    st.session_state["authentication_status"] = True  # Add this line
-                    st.session_state["page"] = "Dashboard"  # Force dashboard page
-                    st.rerun()  # This should be the last line
+                if init_dev_login():
+                    st.success("Successfully logged in!")
+                    st.session_state.page = "Dashboard"
+                    # Remove st.rerun() and use JavaScript to force reload
+                    components.html(
+                        '''
+                        <script>
+                            window.parent.location.reload()
+                        </script>
+                        ''',
+                        height=0
+                    )
             
             # Add descriptive text
             st.markdown("""
