@@ -4,13 +4,15 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from database import get_db_connection
 import requests
+import json
+from datetime import datetime
 
 def setup_google_oauth():
     st.title("Welcome to Personal Finance Manager")
     
     try:
-        # Get the Replit URL from environment
-        replit_url = os.environ.get('REPLIT_URL', f"https://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER')}.repl.co")
+        # Get the Replit URL from environment using HTTP
+        replit_url = f"http://{os.environ.get('REPL_SLUG')}.{os.environ.get('REPL_OWNER')}.repl.co"
         
         # Google OAuth configuration
         client_config = {
@@ -61,7 +63,7 @@ def setup_google_oauth():
                 </div>
             """.format(authorization_url), unsafe_allow_html=True)
             
-            # Add some descriptive text
+            # Add descriptive text
             st.markdown("""
                 ### 🚀 Get Started with Personal Finance Manager
                 
@@ -76,22 +78,53 @@ def setup_google_oauth():
                 Sign in with your Google account to begin.
             """)
         
-        # Handle OAuth callback
+        # Handle OAuth callback with improved error handling
         if "code" in st.query_params:
             try:
                 flow.fetch_token(code=st.query_params["code"])
                 credentials = flow.credentials
-                st.session_state.user = get_or_create_user(credentials)
-                st.query_params.clear()
-                st.rerun()
+                user_info = get_or_create_user(credentials)
+                
+                if user_info:
+                    st.session_state.user = user_info
+                    st.query_params.clear()
+                    st.rerun()
+                else:
+                    raise Exception("Failed to get user information")
+                
+            except requests.exceptions.SSLError as ssl_error:
+                st.error("SSL Certificate Error. Please try again using HTTP.")
+                st.info("If the problem persists, please contact support.")
+                log_oauth_error("SSL Error", str(ssl_error))
+                
+            except requests.exceptions.ConnectionError as conn_error:
+                st.error("Connection Error. Please check your internet connection and try again.")
+                log_oauth_error("Connection Error", str(conn_error))
+                
+            except requests.exceptions.HTTPError as http_error:
+                error_message = "Authentication failed"
+                if http_error.response.status_code == 400:
+                    error_message = "Invalid request. Please try again."
+                elif http_error.response.status_code == 401:
+                    error_message = "Unauthorized. Please check your credentials."
+                elif http_error.response.status_code == 403:
+                    error_message = "Access forbidden. Please check your permissions."
+                    
+                st.error(error_message)
+                log_oauth_error("HTTP Error", str(http_error))
+                
             except Exception as e:
                 st.error(f"Authentication failed: {str(e)}")
+                log_oauth_error("General Error", str(e))
+                
+            finally:
                 if "oauth_state" in st.session_state:
                     del st.session_state.oauth_state
 
     except Exception as e:
-        st.error(f"Error setting up authentication: {str(e)}")
-        st.info("Please ensure all required environment variables are set.")
+        st.error("Failed to initialize authentication")
+        st.info("Please ensure all required environment variables are set correctly.")
+        log_oauth_error("Initialization Error", str(e))
 
 def check_authentication():
     return "user" in st.session_state
@@ -101,13 +134,19 @@ def get_or_create_user(credentials):
     cur = conn.cursor()
     
     try:
-        # Get user info from Google
-        userinfo_response = requests.get(
-            "https://www.googleapis.com/oauth2/v2/userinfo",
-            headers={'Authorization': f'Bearer {credentials.token}'}
-        )
-        userinfo_response.raise_for_status()
-        userinfo = userinfo_response.json()
+        # Get user info from Google with error handling
+        try:
+            userinfo_response = requests.get(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                headers={'Authorization': f'Bearer {credentials.token}'},
+                timeout=10
+            )
+            userinfo_response.raise_for_status()
+            userinfo = userinfo_response.json()
+        except requests.exceptions.RequestException as e:
+            st.error("Failed to fetch user information from Google")
+            log_oauth_error("Google API Error", str(e))
+            return None
         
         # Check if user exists
         cur.execute("SELECT id, email FROM users WHERE google_id = %s", (userinfo['id'],))
@@ -125,8 +164,18 @@ def get_or_create_user(credentials):
         return {"id": user[0], "email": user[1]} if user else None
         
     except Exception as e:
-        st.error(f"Error getting user information: {str(e)}")
+        st.error("Database error while processing user information")
+        log_oauth_error("Database Error", str(e))
         return None
     finally:
         cur.close()
         conn.close()
+
+def log_oauth_error(error_type, error_message):
+    """Log OAuth errors for debugging"""
+    error_log = {
+        "timestamp": str(datetime.now()),
+        "type": error_type,
+        "message": error_message
+    }
+    print(f"OAuth Error: {json.dumps(error_log)}")  # For server logs
