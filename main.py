@@ -33,14 +33,19 @@ def main():
         # If authenticated, show the navigation and content
         st.sidebar.markdown(f"Welcome, {st.session_state.user['email']}")
         
+        # Update page navigation to use query parameters
+        page = st.query_params.get("page", "Dashboard")
+        st.session_state["page"] = page
+        
         # Navigation
         page = st.sidebar.selectbox(
             "Navigation",
             ["Dashboard", "Transactions", "Budget", "Settings"],
-            index=["Dashboard", "Transactions", "Budget", "Settings"].index(
-                st.session_state.get("page", "Dashboard")
-            )
+            index=["Dashboard", "Transactions", "Budget", "Settings"].index(page)
         )
+        
+        # Update query parameters when navigation changes
+        st.experimental_set_query_params(page=page)
 
         # Header
         st.header(f"Personal Finance Manager - {page}")

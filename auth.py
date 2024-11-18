@@ -72,33 +72,29 @@ def setup_google_oauth():
             # Add development login button
             st.markdown("---")  # Add separator
             if st.button("🔑 Development Login (Bypass Authentication)", type="secondary"):
-                try:
-                    logger.info("Starting development login process")
-                    
-                    # Create mock user session
-                    mock_user = {
-                        "id": 1,
-                        "email": "dev@example.com"
-                    }
-                    
-                    # Set session states first
-                    st.session_state.user = mock_user
-                    st.session_state.authentication_status = True
-                    st.session_state.page = "Dashboard"
-                    
-                    logger.info("Session states set successfully")
-                    
-                    # Initialize sample data
-                    initialize_mock_data(mock_user["id"])
-                    logger.info("Mock data initialized successfully")
-                    
-                    # Show success message and rerun
-                    st.success("Successfully logged in!")
-                    st.rerun()
-                    
-                except Exception as e:
-                    logger.error(f"Development login error: {str(e)}")
-                    st.error("Failed to log in. Please try again.")
+                # Create mock user session
+                mock_user = {
+                    "id": 1,
+                    "email": "dev@example.com"
+                }
+                
+                # Initialize mock data first
+                initialize_mock_data(mock_user["id"])
+                
+                # Set session states
+                st.session_state["user"] = mock_user
+                st.session_state["authentication_status"] = True
+                
+                # Force page refresh to dashboard
+                st.experimental_set_query_params(page="Dashboard")
+                
+                # Show success message with explicit styling
+                st.markdown(
+                    '<p style="color: #262730; font-size: 16px;">Successfully logged in! Redirecting to dashboard...</p>',
+                    unsafe_allow_html=True
+                )
+                st.balloons()
+                st.rerun()
             
             # Add descriptive text
             st.markdown("""
@@ -123,9 +119,9 @@ def setup_google_oauth():
                 user_info = get_or_create_user(credentials)
                 
                 if user_info:
-                    st.session_state.user = user_info
-                    st.session_state.authentication_status = True
-                    st.session_state.page = "Dashboard"
+                    st.session_state["user"] = user_info
+                    st.session_state["authentication_status"] = True
+                    st.experimental_set_query_params(page="Dashboard")
                     st.rerun()
                 else:
                     raise Exception("Failed to get user information")
