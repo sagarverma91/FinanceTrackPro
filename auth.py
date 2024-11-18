@@ -12,7 +12,7 @@ def setup_google_oauth():
     
     try:
         # Get the Replit URL and construct redirect URI
-        replit_url = f"https://FinanceTrackPro.sv10491.repl.co"
+        replit_url = f"https://financetrackpro.sv10491.repl.co"
         redirect_uri = f"{replit_url}/callback"
         
         # Google OAuth configuration
