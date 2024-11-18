@@ -4,13 +4,17 @@ import visualization as viz
 import pandas as pd
 
 def show_dashboard():
-    # Add a dashboard button
-    if st.button("Dashboard", type="primary"):
-        st.markdown("## Welcome to your dashboard!")
-        st.balloons()  # Add a fun effect
-        return
+    # Add a prominent dashboard button at the top
+    st.markdown("### 🏠 Dashboard Overview")
+    if st.button("Show Welcome Message", type="primary", key="welcome_btn"):
+        st.markdown("## 👋 Welcome to your dashboard!")
+        st.write("Here you can track all your financial activities.")
+        st.balloons()
     
-    # If button not clicked, show regular dashboard content
+    # Add a visual separator
+    st.markdown("---")
+    
+    # Rest of the dashboard content
     col1, col2 = st.columns(2)
     
     # Get user's transaction data
