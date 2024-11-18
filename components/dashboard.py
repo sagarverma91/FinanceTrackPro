@@ -4,6 +4,13 @@ import visualization as viz
 import pandas as pd
 
 def show_dashboard():
+    # Add a dashboard button
+    if st.button("Dashboard", type="primary"):
+        st.markdown("## Welcome to your dashboard!")
+        st.balloons()  # Add a fun effect
+        return
+    
+    # If button not clicked, show regular dashboard content
     col1, col2 = st.columns(2)
     
     # Get user's transaction data
