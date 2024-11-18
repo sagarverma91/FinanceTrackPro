@@ -7,7 +7,10 @@ import requests
 import json
 from datetime import datetime, timedelta
 import urllib3
+import logging
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+logger = logging.getLogger(__name__)
 
 def setup_google_oauth():
     st.title("Welcome to Personal Finance Manager")
@@ -69,19 +72,33 @@ def setup_google_oauth():
             # Add development login button
             st.markdown("---")  # Add separator
             if st.button("🔑 Development Login (Bypass Authentication)", type="secondary"):
-                # Create mock user session
-                mock_user = {
-                    "id": 1,
-                    "email": "dev@example.com"
-                }
-                st.session_state.user = mock_user
-                st.session_state["authentication_status"] = True
-                st.session_state["page"] = "Dashboard"
-                
-                # Initialize sample data
-                initialize_mock_data(mock_user["id"])
-                st.success("Successfully logged in!")
-                st.experimental_rerun()
+                try:
+                    logger.info("Starting development login process")
+                    
+                    # Create mock user session
+                    mock_user = {
+                        "id": 1,
+                        "email": "dev@example.com"
+                    }
+                    
+                    # Set session states first
+                    st.session_state.user = mock_user
+                    st.session_state.authentication_status = True
+                    st.session_state.page = "Dashboard"
+                    
+                    logger.info("Session states set successfully")
+                    
+                    # Initialize sample data
+                    initialize_mock_data(mock_user["id"])
+                    logger.info("Mock data initialized successfully")
+                    
+                    # Show success message and rerun
+                    st.success("Successfully logged in!")
+                    st.rerun()
+                    
+                except Exception as e:
+                    logger.error(f"Development login error: {str(e)}")
+                    st.error("Failed to log in. Please try again.")
             
             # Add descriptive text
             st.markdown("""
@@ -98,7 +115,7 @@ def setup_google_oauth():
                 Sign in with your Google account to begin.
             """)
 
-        # Handle OAuth callback with improved error handling
+        # Handle OAuth callback
         if "code" in st.query_params:
             try:
                 flow.fetch_token(code=st.query_params["code"])
@@ -107,36 +124,15 @@ def setup_google_oauth():
                 
                 if user_info:
                     st.session_state.user = user_info
-                    st.session_state["authentication_status"] = True
-                    st.session_state["page"] = "Dashboard"
-                    st.query_params.clear()
-                    st.experimental_rerun()
+                    st.session_state.authentication_status = True
+                    st.session_state.page = "Dashboard"
+                    st.rerun()
                 else:
                     raise Exception("Failed to get user information")
                 
-            except requests.exceptions.SSLError as ssl_error:
-                st.error("SSL Certificate Error. Please try again.")
-                log_oauth_error("SSL Error", str(ssl_error))
-                
-            except requests.exceptions.ConnectionError as conn_error:
-                st.error("Connection Error. Please check your internet connection and try again.")
-                log_oauth_error("Connection Error", str(conn_error))
-                
-            except requests.exceptions.HTTPError as http_error:
-                error_message = "Authentication failed"
-                if http_error.response.status_code == 400:
-                    error_message = "Invalid request. Please try again."
-                elif http_error.response.status_code == 401:
-                    error_message = "Unauthorized. Please check your credentials."
-                elif http_error.response.status_code == 403:
-                    error_message = "Access forbidden. Please check your permissions."
-                    
-                st.error(error_message)
-                log_oauth_error("HTTP Error", str(http_error))
-                
             except Exception as e:
                 st.error(f"Authentication failed: {str(e)}")
-                log_oauth_error("General Error", str(e))
+                log_oauth_error("Authentication Error", str(e))
                 
             finally:
                 if "oauth_state" in st.session_state:
