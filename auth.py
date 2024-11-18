@@ -5,7 +5,7 @@ from google_auth_oauthlib.flow import Flow
 from database import get_db_connection
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -65,6 +65,16 @@ def setup_google_oauth():
                     </a>
                 </div>
             """.format(authorization_url), unsafe_allow_html=True)
+            
+            # Add development login button
+            st.markdown("---")  # Add separator
+            if st.button("🔑 Development Login (Bypass Authentication)", type="secondary"):
+                # Create mock user session
+                mock_user = create_or_get_mock_user()
+                if mock_user:
+                    st.session_state.user = mock_user
+                    initialize_mock_data(mock_user["id"])
+                    st.rerun()
             
             # Add descriptive text
             st.markdown("""
@@ -170,6 +180,98 @@ def get_or_create_user(credentials):
         st.error("Database error while processing user information")
         log_oauth_error("Database Error", str(e))
         return None
+    finally:
+        cur.close()
+        conn.close()
+
+def create_or_get_mock_user():
+    """Create or get the mock user for development"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    try:
+        # Check if mock user exists
+        cur.execute("SELECT id, email FROM users WHERE email = %s", ("dev@example.com",))
+        user = cur.fetchone()
+        
+        if not user:
+            cur.execute("""
+                INSERT INTO users (email)
+                VALUES (%s)
+                RETURNING id, email
+            """, ("dev@example.com",))
+            user = cur.fetchone()
+            conn.commit()
+        
+        return {"id": user[0], "email": user[1]} if user else None
+        
+    except Exception as e:
+        st.error("Database error while creating mock user")
+        log_oauth_error("Database Error", str(e))
+        return None
+    finally:
+        cur.close()
+        conn.close()
+
+def initialize_mock_data(user_id):
+    """Initialize sample data for the mock user"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    try:
+        # Initialize default categories
+        default_categories = [
+            ('Food', '🍽️', '#FF6B6B'),
+            ('Transport', '🚗', '#4ECDC4'),
+            ('Entertainment', '🎮', '#45B7D1'),
+            ('Shopping', '🛍️', '#96CEB4'),
+            ('Bills', '📄', '#FFEEAD'),
+            ('Other', '📌', '#D4D4D4')
+        ]
+        
+        for cat in default_categories:
+            cur.execute("""
+                INSERT INTO transaction_categories (user_id, name, icon, color)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (user_id, name) DO NOTHING
+            """, (user_id, cat[0], cat[1], cat[2]))
+        
+        # Add sample transactions
+        sample_transactions = [
+            (75.50, 'Food', 'Grocery shopping', datetime.now() - timedelta(days=5)),
+            (45.00, 'Transport', 'Uber ride', datetime.now() - timedelta(days=3)),
+            (120.00, 'Entertainment', 'Movie night', datetime.now() - timedelta(days=2)),
+            (250.00, 'Shopping', 'New clothes', datetime.now() - timedelta(days=1)),
+            (100.00, 'Bills', 'Electricity bill', datetime.now())
+        ]
+        
+        for trans in sample_transactions:
+            cur.execute("""
+                INSERT INTO transactions (user_id, amount, category, description, date)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT DO NOTHING
+            """, (user_id, trans[0], trans[1], trans[2], trans[3]))
+        
+        # Add sample budget
+        sample_budgets = [
+            ('Food', 500.00, 'Monthly'),
+            ('Transport', 200.00, 'Monthly'),
+            ('Entertainment', 300.00, 'Monthly'),
+            ('Shopping', 400.00, 'Monthly'),
+            ('Bills', 600.00, 'Monthly')
+        ]
+        
+        for budget in sample_budgets:
+            cur.execute("""
+                INSERT INTO budgets (user_id, category, amount, period)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (user_id, category, period, start_date) DO NOTHING
+            """, (user_id, budget[0], budget[1], budget[2]))
+        
+        conn.commit()
+    except Exception as e:
+        st.error("Failed to initialize mock data")
+        log_oauth_error("Mock Data Error", str(e))
     finally:
         cur.close()
         conn.close()
