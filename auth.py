@@ -69,15 +69,17 @@ def setup_google_oauth():
                 </div>
             """.format(authorization_url), unsafe_allow_html=True)
             
-            # Add development login button
+            # Add development login button with debug prints
             st.markdown("---")  # Add separator
             if st.button("🔑 Development Login (Bypass Authentication)", type="secondary"):
-                # Set session states first
+                st.write("Debug: Setting session state...")
                 st.session_state["user"] = {
                     "id": 1,
                     "email": "dev@example.com"
                 }
+                st.write(f"Debug: User session state: {st.session_state.get('user')}")
                 st.session_state["authentication_status"] = True
+                st.write(f"Debug: Auth status: {st.session_state.get('authentication_status')}")
                 st.session_state["page"] = "Dashboard"
                 
                 # Initialize sample data
