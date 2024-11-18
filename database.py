@@ -32,6 +32,18 @@ def init_database():
         """)
         
         cur.execute("""
+            CREATE TABLE IF NOT EXISTS transaction_categories (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                name VARCHAR(50) NOT NULL,
+                icon VARCHAR(20),
+                color VARCHAR(20),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, name)
+            )
+        """)
+        
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS transactions (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id),
@@ -39,7 +51,8 @@ def init_database():
                 category VARCHAR(50),
                 description TEXT,
                 date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                bank_reference VARCHAR(255)
+                bank_reference VARCHAR(255),
+                tags TEXT[]
             )
         """)
         
@@ -50,8 +63,10 @@ def init_database():
                 category VARCHAR(50),
                 amount DECIMAL(10,2),
                 period VARCHAR(20),
+                start_date DATE,
+                end_date DATE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, category)
+                UNIQUE(user_id, category, period, start_date)
             )
         """)
         
@@ -82,17 +97,76 @@ def get_user_transactions(user_id):
         cur.close()
         conn.close()
 
-def save_transaction(user_id, amount, category, description, bank_reference=None):
+def get_user_categories(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT name, icon, color FROM transaction_categories 
+            WHERE user_id = %s 
+            ORDER BY name
+        """, (user_id,))
+        categories = cur.fetchall()
+        if not categories:
+            # Insert default categories if none exist
+            default_categories = [
+                ('Food', '🍽️', '#FF6B6B'),
+                ('Transport', '🚗', '#4ECDC4'),
+                ('Entertainment', '🎮', '#45B7D1'),
+                ('Shopping', '🛍️', '#96CEB4'),
+                ('Bills', '📄', '#FFEEAD'),
+                ('Other', '📌', '#D4D4D4')
+            ]
+            for cat in default_categories:
+                cur.execute("""
+                    INSERT INTO transaction_categories (user_id, name, icon, color)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (user_id, name) DO NOTHING
+                """, (user_id, cat[0], cat[1], cat[2]))
+            conn.commit()
+            cur.execute("""
+                SELECT name, icon, color FROM transaction_categories 
+                WHERE user_id = %s 
+                ORDER BY name
+            """, (user_id,))
+            categories = cur.fetchall()
+        return categories
+    except Exception as e:
+        st.error(f"Error fetching categories: {str(e)}")
+        return []
+    finally:
+        cur.close()
+        conn.close()
+
+def save_transaction(user_id, amount, category, description, date=None, bank_reference=None, tags=None):
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         cur.execute("""
-            INSERT INTO transactions (user_id, amount, category, description, bank_reference)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (user_id, amount, category, description, bank_reference))
+            INSERT INTO transactions (user_id, amount, category, description, date, bank_reference, tags)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, amount, category, description, date, bank_reference, tags))
         conn.commit()
     except Exception as e:
         st.error(f"Error saving transaction: {str(e)}")
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+def save_category(user_id, name, icon, color):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO transaction_categories (user_id, name, icon, color)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (user_id, name) 
+            DO UPDATE SET icon = EXCLUDED.icon, color = EXCLUDED.color
+        """, (user_id, name, icon, color))
+        conn.commit()
+    except Exception as e:
+        st.error(f"Error saving category: {str(e)}")
         raise
     finally:
         cur.close()
