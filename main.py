@@ -25,7 +25,12 @@ def main():
         # Initialize database
         init_database()
         
-        # Check authentication first
+        # Development mode - bypass authentication
+        if st.query_params.get("dev_mode"):
+            st.session_state["user"] = {"id": 1, "email": "dev@example.com"}
+            st.session_state["authentication_status"] = True
+        
+        # Check authentication
         if not check_authentication():
             setup_google_oauth()
             return

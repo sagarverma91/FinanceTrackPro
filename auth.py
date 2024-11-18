@@ -69,27 +69,22 @@ def setup_google_oauth():
                 </div>
             """.format(authorization_url), unsafe_allow_html=True)
             
-            # Add development login button with debug prints
+            # Add development login button with simplified flow
             st.markdown("---")  # Add separator
             if st.button("🔑 Development Login (Bypass Authentication)", type="secondary"):
-                st.write("Debug: Setting session state...")
+                # Set user session
                 st.session_state["user"] = {
                     "id": 1,
                     "email": "dev@example.com"
                 }
-                st.write(f"Debug: User session state: {st.session_state.get('user')}")
                 st.session_state["authentication_status"] = True
-                st.write(f"Debug: Auth status: {st.session_state.get('authentication_status')}")
-                st.session_state["page"] = "Dashboard"
                 
-                # Initialize sample data
+                # Initialize mock data
                 initialize_mock_data(1)
                 
                 # Show success message
                 st.success("Successfully logged in!")
-                
-                # Redirect to dashboard
-                st.switch_page("main.py")
+                st.experimental_rerun()  # Simple rerun instead of page switch
             
             # Add descriptive text
             st.markdown("""
@@ -105,6 +100,10 @@ def setup_google_oauth():
                 
                 Sign in with your Google account to begin.
             """)
+            
+            # Add direct dashboard access link
+            st.markdown("---")
+            st.markdown("[View Dashboard in Development Mode](/?dev_mode=1)")
 
         # Handle OAuth callback
         if "code" in st.query_params:
@@ -116,8 +115,7 @@ def setup_google_oauth():
                 if user_info:
                     st.session_state["user"] = user_info
                     st.session_state["authentication_status"] = True
-                    st.session_state["page"] = "Dashboard"
-                    st.switch_page("main.py")
+                    st.experimental_rerun()
                 else:
                     raise Exception("Failed to get user information")
                 
