@@ -1,6 +1,6 @@
 import streamlit as st
 from components import dashboard, budget, transactions
-from database import init_database
+from database import init_database, get_db_connection
 from auth import initialize_mock_data
 import visualization as viz
 import logging

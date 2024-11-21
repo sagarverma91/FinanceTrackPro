@@ -1,0 +1,40 @@
+URL: http://0.0.0.0:5000
+
+2024-11-21 18:59:38,485 - database - INFO - Creating database tables...
+2024-11-21 18:59:38,528 - database - INFO - Users table created successfully
+2024-11-21 18:59:38,549 - database - INFO - Transaction categories table created successfully
+2024-11-21 18:59:38,571 - database - INFO - Transactions table created successfully
+2024-11-21 18:59:38,592 - database - INFO - Budgets table created successfully
+2024-11-21 18:59:38,613 - database - INFO - All tables created successfully
+2024-11-21 18:59:38,614 - __main__ - ERROR - Critical application error: name 'get_db_connection' is not defined
+2024-11-21 18:59:38,615 - __main__ - ERROR - Traceback (most recent call last):
+  File "/home/runner/FinanceTrackPro/main.py", line 31, in main
+    conn = get_db_connection()
+           ^^^^^^^^^^^^^^^^^
+NameError: name 'get_db_connection' is not defined
+
+2024-11-21 18:59:40,003 - database - INFO - Creating database tables...
+2024-11-21 18:59:40,040 - database - INFO - Users table created successfully
+2024-11-21 18:59:40,059 - database - INFO - Transaction categories table created successfully
+2024-11-21 18:59:40,078 - database - INFO - Transactions table created successfully
+2024-11-21 18:59:40,097 - database - INFO - Budgets table created successfully
+2024-11-21 18:59:40,116 - database - INFO - All tables created successfully
+2024-11-21 18:59:40,116 - __main__ - ERROR - Critical application error: name 'get_db_connection' is not defined
+2024-11-21 18:59:40,117 - __main__ - ERROR - Traceback (most recent call last):
+  File "/home/runner/FinanceTrackPro/main.py", line 31, in main
+    conn = get_db_connection()
+           ^^^^^^^^^^^^^^^^^
+NameError: name 'get_db_connection' is not defined
+
+2024-11-21 18:59:48,133 - database - INFO - Creating database tables...
+2024-11-21 18:59:48,186 - database - INFO - Users table created successfully
+2024-11-21 18:59:48,212 - database - INFO - Transaction categories table created successfully
+2024-11-21 18:59:48,238 - database - INFO - Transactions table created successfully
+2024-11-21 18:59:48,265 - database - INFO - Budgets table created successfully
+2024-11-21 18:59:48,291 - database - INFO - All tables created successfully
+2024-11-21 18:59:48,291 - __main__ - ERROR - Critical application error: name 'get_db_connection' is not defined
+2024-11-21 18:59:48,292 - __main__ - ERROR - Traceback (most recent call last):
+  File "/home/runner/FinanceTrackPro/main.py", line 31, in main
+    conn = get_db_connection()
+           ^^^^^^^^^^^^^^^^^
+NameError: name 'get_db_connection' is not defined
