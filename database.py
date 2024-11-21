@@ -25,22 +25,22 @@ def init_database():
     cur = conn.cursor()
     
     try:
-        # Create necessary tables
+        # Create tables in proper order
         logger.info("Creating database tables...")
         
-        # Create users table
-        cur.execute("""
+        # Users table first
+        cur.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 email VARCHAR(255) UNIQUE NOT NULL,
                 google_id VARCHAR(255) UNIQUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        ''')
         logger.info("Users table created successfully")
         
-        # Create transaction_categories table
-        cur.execute("""
+        # Categories table second
+        cur.execute('''
             CREATE TABLE IF NOT EXISTS transaction_categories (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id),
@@ -50,14 +50,11 @@ def init_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(user_id, name)
             )
-        """)
+        ''')
         logger.info("Transaction categories table created successfully")
         
-        # Drop and recreate transactions table
-        cur.execute("DROP TABLE IF EXISTS transactions CASCADE")
-        
-        # Create transactions table
-        cur.execute("""
+        # Transactions table third
+        cur.execute('''
             CREATE TABLE IF NOT EXISTS transactions (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id),
@@ -68,11 +65,11 @@ def init_database():
                 bank_reference VARCHAR(255),
                 tags TEXT[]
             )
-        """)
+        ''')
         logger.info("Transactions table created successfully")
         
-        # Create budgets table
-        cur.execute("""
+        # Budgets table last
+        cur.execute('''
             CREATE TABLE IF NOT EXISTS budgets (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id),
@@ -82,7 +79,7 @@ def init_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(user_id, category, period)
             )
-        """)
+        ''')
         logger.info("Budgets table created successfully")
         
         conn.commit()
@@ -91,7 +88,6 @@ def init_database():
     except Exception as e:
         conn.rollback()
         logger.error(f"Database initialization error: {str(e)}")
-        st.error("Failed to initialize database. Please try again.")
         raise
     finally:
         cur.close()

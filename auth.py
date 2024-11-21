@@ -58,11 +58,17 @@ def initialize_mock_data(user_id):
         ]
         
         for budget in sample_budgets:
+            # First check if budget exists
             cur.execute('''
-                INSERT INTO budgets (user_id, category, amount, period)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (user_id, category, period) DO NOTHING
-            ''', (user_id, budget[0], budget[1], budget[2]))
+                SELECT id FROM budgets 
+                WHERE user_id = %s AND category = %s AND period = %s
+            ''', (user_id, budget[0], budget[2]))
+            
+            if not cur.fetchone():
+                cur.execute('''
+                    INSERT INTO budgets (user_id, category, amount, period)
+                    VALUES (%s, %s, %s, %s)
+                ''', (user_id, budget[0], budget[1], budget[2]))
         
         conn.commit()
     except Exception as e:
