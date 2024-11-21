@@ -46,7 +46,6 @@ def initialize_mock_data(user_id):
             cur.execute("""
                 INSERT INTO transactions (user_id, amount, category, description, date)
                 VALUES (%s, %s, %s, %s, %s)
-                ON CONFLICT DO NOTHING
             """, (user_id, trans[0], trans[1], trans[2], trans[3]))
         
         # Add sample budget
@@ -59,11 +58,11 @@ def initialize_mock_data(user_id):
         ]
         
         for budget in sample_budgets:
-            cur.execute("""
+            cur.execute('''
                 INSERT INTO budgets (user_id, category, amount, period)
                 VALUES (%s, %s, %s, %s)
-                ON CONFLICT (user_id, category, period, start_date) DO NOTHING
-            """, (user_id, budget[0], budget[1], budget[2]))
+                ON CONFLICT (user_id, category, period) DO NOTHING
+            ''', (user_id, budget[0], budget[1], budget[2]))
         
         conn.commit()
     except Exception as e:

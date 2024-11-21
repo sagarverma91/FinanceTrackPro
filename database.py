@@ -76,10 +76,8 @@ def init_database():
                 category VARCHAR(50),
                 amount DECIMAL(10,2),
                 period VARCHAR(20),
-                start_date DATE DEFAULT CURRENT_DATE,
-                end_date DATE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, category, period, start_date)
+                UNIQUE(user_id, category, period)
             )
         """)
         logger.info("Budgets table created successfully")
