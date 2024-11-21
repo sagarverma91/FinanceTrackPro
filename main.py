@@ -27,8 +27,27 @@ def main():
         
         # Auto-initialize user session
         if "user" not in st.session_state:
-            st.session_state["user"] = {"id": 1, "email": "dev@example.com"}
-            initialize_mock_data(1)  # Initialize sample data
+            # First create the user in database
+            conn = get_db_connection()
+            cur = conn.cursor()
+            try:
+                # Insert mock user
+                cur.execute(
+                    "INSERT INTO users (id, email) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING",
+                    (1, "dev@example.com")
+                )
+                conn.commit()
+                
+                # Set session state
+                st.session_state["user"] = {"id": 1, "email": "dev@example.com"}
+                
+                # Initialize mock data after user exists
+                initialize_mock_data(1)
+            except Exception as e:
+                st.error(f"Failed to initialize user: {str(e)}")
+            finally:
+                cur.close()
+                conn.close()
         
         # Show navigation and content
         st.sidebar.markdown("### Navigation")
