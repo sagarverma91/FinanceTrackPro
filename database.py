@@ -53,6 +53,9 @@ def init_database():
         """)
         logger.info("Transaction categories table created successfully")
         
+        # Drop and recreate transactions table
+        cur.execute("DROP TABLE IF EXISTS transactions CASCADE")
+        
         # Create transactions table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS transactions (

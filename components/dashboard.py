@@ -31,7 +31,7 @@ def show_dashboard():
         
         # Spending trend
         spending_trend = viz.create_spending_trend(transactions)
-        st.plotly_chart(spending_trend, use_container_width=True)
+        st.plotly_chart(spending_trend, use_container_width=True, key="spending_trend_chart")
         
         # Recent transactions
         st.subheader("Recent Transactions")
@@ -44,7 +44,7 @@ def show_dashboard():
     with col2:
         # Category breakdown
         category_chart = viz.create_category_breakdown(transactions)
-        st.plotly_chart(category_chart, use_container_width=True)
+        st.plotly_chart(category_chart, use_container_width=True, key="category_breakdown_chart")
         
         # Budget overview
         st.subheader("Budget Overview")
@@ -52,7 +52,7 @@ def show_dashboard():
         actual_spending = get_actual_spending(transactions)
         if not budget_data.empty and not actual_spending.empty:
             budget_progress = viz.create_budget_progress(budget_data, actual_spending)
-            st.plotly_chart(budget_progress, use_container_width=True)
+            st.plotly_chart(budget_progress, use_container_width=True, key="budget_progress_chart")
         else:
             st.info("Set up your budget to see the overview")
 
