@@ -77,6 +77,12 @@ def main():
         # Update session state
         st.session_state["page"] = selected_page
 
+        # Add return to landing page button
+        if st.sidebar.button("Return to Landing Page", type="secondary"):
+            # Clear session state
+            st.session_state.clear()
+            st.rerun()
+
         # Header
         st.header(f"Personal Finance Manager - {selected_page}")
         
