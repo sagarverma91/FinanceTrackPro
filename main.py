@@ -1,10 +1,25 @@
 import streamlit as st
+import logging
+import traceback
+import os
 from components import dashboard, budget, transactions
 from database import init_database, get_db_connection
 from auth import initialize_mock_data
 import visualization as viz
-import logging
-import sys
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Page config
+st.set_page_config(
+    page_title="Personal Finance Manager",
+    page_icon="💰",
+    layout="wide"
+)
 import traceback
 
 # Configure logging with more detailed format
@@ -20,36 +35,47 @@ st.set_page_config(
     layout="wide"
 )
 
+# Load custom CSS
+with open('.streamlit/style.css') as f:
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 def main():
     try:
         # Initialize database
         init_database()
         
-        # Auto-initialize user session
+        # Check if user is authenticated
         if "user" not in st.session_state:
-            # First create the user in database
-            conn = get_db_connection()
-            cur = conn.cursor()
-            try:
-                # Insert mock user
-                cur.execute(
-                    "INSERT INTO users (id, email) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING",
-                    (1, "dev@example.com")
-                )
-                conn.commit()
-                
-                # Set session state
-                st.session_state["user"] = {"id": 1, "email": "dev@example.com"}
-                
-                # Initialize mock data after user exists
-                initialize_mock_data(1)
-            except Exception as e:
-                st.error(f"Failed to initialize user: {str(e)}")
-            finally:
-                cur.close()
-                conn.close()
+            # Show landing page for non-authenticated users
+            from components.landing import show_landing
+            show_landing()
+            
+            # Handle Get Started button click
+            if st.session_state.get("cta_button", False):
+                # Create mock user for demo
+                conn = get_db_connection()
+                cur = conn.cursor()
+                try:
+                    # Insert mock user
+                    cur.execute(
+                        "INSERT INTO users (id, email) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING",
+                        (1, "dev@example.com")
+                    )
+                    conn.commit()
+                    
+                    # Set session state
+                    st.session_state["user"] = {"id": 1, "email": "dev@example.com"}
+                    
+                    # Initialize mock data after user exists
+                    initialize_mock_data(1)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to initialize user: {str(e)}")
+                finally:
+                    cur.close()
+                    conn.close()
+            return
         
-        # Show navigation and content
+        # Show navigation and content for authenticated users
         st.sidebar.markdown("### Navigation")
         
         # Navigation
