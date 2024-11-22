@@ -1,12 +1,10 @@
-/* Dark theme and gradient styles */
 [data-testid="stAppViewContainer"] {
-    background: linear-gradient(to bottom, #1a1a1a, #2d2d2d);
+    background: #1A202C;
     color: white;
 }
 
-/* Gradient text effect */
 .gradient-text {
-    background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+    background: linear-gradient(45deg, #8AB4F8, #C4B5FD);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-size: 3em;
@@ -14,9 +12,8 @@
     margin-bottom: 2rem;
 }
 
-/* Modern button styling */
 .stButton > button {
-    background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+    background: #4FD1C5;
     color: white;
     border: none;
     padding: 0.8rem 2rem;
@@ -25,12 +22,6 @@
     transition: all 0.3s ease;
 }
 
-.stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
-}
-
-/* Feature card styling */
 .feature-card {
     background: rgba(255, 255, 255, 0.05);
     padding: 1.5rem;
@@ -39,17 +30,29 @@
     transition: transform 0.3s ease;
 }
 
+.subtitle-text {
+    color: #A0AEC0;
+    font-size: 1.2em;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* Keep hover effects for interactivity */
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(79, 209, 197, 0.3);
+}
+
 .feature-card:hover {
     transform: translateY(-5px);
 }
 
-/* Spacing and layout */
+/* Maintain layout spacing */
 .block-container {
     padding-top: 2rem;
     padding-bottom: 2rem;
 }
 
-/* Hero section spacing */
 .hero-section {
     margin: 4rem 0;
     text-align: center;

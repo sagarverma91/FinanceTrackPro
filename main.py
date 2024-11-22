@@ -30,11 +30,27 @@ def main():
         # Initialize database
         init_database()
         
+        # Add debug logging
+        logger.info("Starting main application flow")
+        
+        # Initialize session state if needed
+        if "page" not in st.session_state:
+            st.session_state.page = "Landing"
+        
         # Check if user is authenticated
         if "user" not in st.session_state:
+            logger.info("User not authenticated, showing landing page")
             # Show landing page for non-authenticated users
-            from components.landing import show_landing
-            show_landing()
+            try:
+                from components.landing import show_landing
+                logger.info("Landing page component imported successfully")
+                st.empty()  # Clear any existing content
+                show_landing()
+                logger.info("Landing page rendered successfully")
+            except Exception as e:
+                logger.error(f"Failed to load landing page: {str(e)}")
+                logger.error(traceback.format_exc())
+                st.error("Failed to load the landing page. Please try refreshing.")
             
             # Handle Get Started button click
             if st.session_state.get("cta_button", False):

@@ -71,8 +71,10 @@ def get_budget_data():
     conn.close()
     
     if budgets:
-        return pd.DataFrame(budgets, columns=['category', 'amount'])
-    return pd.DataFrame()
+        # Convert tuple list to list of dictionaries for proper DataFrame creation
+        budget_dicts = [{'category': b[0], 'amount': b[1]} for b in budgets]
+        return pd.DataFrame(budget_dicts)
+    return pd.DataFrame({'category': [], 'amount': []})
 
 def get_actual_spending(transactions):
     if not transactions:
