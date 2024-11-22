@@ -1,4 +1,11 @@
 import streamlit as st
+# Must call set_page_config as the first Streamlit command
+st.set_page_config(
+    page_title="Personal Finance Manager",
+    page_icon="💰",
+    layout="wide"
+)
+
 import logging
 import traceback
 import os
@@ -13,14 +20,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-# Page config
-st.set_page_config(
-    page_title="Personal Finance Manager",
-    page_icon="💰",
-    layout="wide"
-)
-import traceback
 
 # Configure logging with more detailed format
 logging.basicConfig(
