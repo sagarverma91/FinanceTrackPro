@@ -1,11 +1,4 @@
 import streamlit as st
-# Must call set_page_config as the first Streamlit command
-st.set_page_config(
-    page_title="Personal Finance Manager",
-    page_icon="💰",
-    layout="wide"
-)
-
 import logging
 import traceback
 import os
@@ -14,6 +7,13 @@ from database import init_database, get_db_connection
 from auth import initialize_mock_data
 import visualization as viz
 
+# Must call set_page_config as the first Streamlit command
+st.set_page_config(
+    page_title="Personal Finance Manager",
+    page_icon="💰",
+    layout="wide"
+)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -21,22 +21,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Configure logging with more detailed format
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-st.set_page_config(
-    page_title="Personal Finance Manager",
-    page_icon="💰",
-    layout="wide"
-)
-
 # Load custom CSS
 with open('.streamlit/style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
 def main():
     try:
         # Initialize database
