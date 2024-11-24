@@ -8,16 +8,20 @@ logger = logging.getLogger(__name__)
 
 def get_db_connection():
     try:
-        return psycopg2.connect(
+        logger.info("Attempting database connection...")
+        conn = psycopg2.connect(
             host=os.environ['PGHOST'],
             database=os.environ['PGDATABASE'],
             user=os.environ['PGUSER'],
             password=os.environ['PGPASSWORD'],
             port=os.environ['PGPORT']
         )
+        logger.info("Database connection successful")
+        return conn
     except Exception as e:
         logger.error(f"Database connection error: {str(e)}")
-        st.error(f"Database connection error. Please try again.")
+        logger.error(f"Environment variables: PGHOST={os.environ.get('PGHOST')}, PGDATABASE={os.environ.get('PGDATABASE')}, PGPORT={os.environ.get('PGPORT')}")
+        st.error("Database connection error. Please try again.")
         raise
 
 def init_database():

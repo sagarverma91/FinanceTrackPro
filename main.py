@@ -3,7 +3,7 @@ import logging
 import traceback
 import os
 from components import dashboard, budget, transactions
-from database import init_database, get_db_connection
+import database
 from auth import initialize_mock_data
 import visualization as viz
 
@@ -21,21 +21,55 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Load custom CSS
-with open('.streamlit/style.css') as f:
-    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+# Load and inject custom CSS
+def load_css():
+    try:
+        logger.info("Loading CSS...")
+        with open('.streamlit/style.css') as f:
+            css = f.read()
+            # Inject the CSS with proper encoding
+            st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
+        logger.info("CSS loaded successfully")
+    except Exception as e:
+        logger.error(f"Failed to load CSS: {str(e)}")
+        st.error("Failed to load styling. The application may not look as intended.")
+
+# Load CSS at the start
+if "css_loaded" not in st.session_state:
+    load_css()
+    st.session_state.css_loaded = True
 
 def main():
     try:
-        # Initialize database
-        init_database()
-        
         # Add debug logging
         logger.info("Starting main application flow")
+        
+        # Initialize database with better error handling
+        try:
+            database.init_database()
+            logger.info("Database initialized successfully")
+            
+            # Verify database connection
+            conn = database.get_db_connection()
+            if conn:
+                logger.info("Database connection established")
+                conn.close()
+                logger.info("Database connection verified and closed")
+            else:
+                logger.error("Failed to establish database connection")
+                raise Exception("Database connection failed")
+            
+        except Exception as db_error:
+            logger.error(f"Database initialization error: {str(db_error)}")
+            st.error("Failed to initialize database. Please try again.")
+            return
         
         # Initialize session state if needed
         if "page" not in st.session_state:
             st.session_state.page = "Landing"
+            
+        # Clear any existing streamlit elements
+        st.empty()
         
         # Check if user is authenticated
         if "user" not in st.session_state:
@@ -55,7 +89,7 @@ def main():
             # Handle Get Started button click
             if st.session_state.get("cta_button", False):
                 # Create mock user for demo
-                conn = get_db_connection()
+                conn = database.get_db_connection()
                 cur = conn.cursor()
                 try:
                     # Insert mock user
@@ -85,9 +119,7 @@ def main():
         selected_page = st.sidebar.selectbox(
             "Navigation",
             ["Dashboard", "Transactions", "Budget", "Settings"],
-            index=["Dashboard", "Transactions", "Budget", "Settings"].index(
-                st.session_state.get("page", "Dashboard")
-            )
+            index=0  # Always default to Dashboard
         )
 
         # Update session state
